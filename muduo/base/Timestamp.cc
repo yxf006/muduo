@@ -10,6 +10,8 @@
 
 using namespace muduo;
 
+// ≤‚ ‘git
+
 BOOST_STATIC_ASSERT(sizeof(Timestamp) == sizeof(int64_t));
 
 Timestamp::Timestamp(int64_t microseconds)

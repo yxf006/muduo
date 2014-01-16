@@ -7,6 +7,7 @@
 #include <boost/operators.hpp>
 
 // 测试下 好不好用 这玩意
+// 测试下git和eclipse的配合使用怎么样 感觉还不错嘛
 
 namespace muduo
 {
@@ -74,13 +75,6 @@ inline bool operator==(Timestamp lhs, Timestamp rhs)
   return lhs.microSecondsSinceEpoch() == rhs.microSecondsSinceEpoch();
 }
 
-///
-/// Gets time difference of two timestamps, result in seconds.
-///
-/// @param high, low
-/// @return (high-low) in seconds
-/// @c double has 52-bit precision, enough for one-microseciond
-/// resolution for next 100 years.
 inline double timeDifference(Timestamp high, Timestamp low) 
 // 时间差 这里使用非类成员函数 更简洁
 {
@@ -88,9 +82,7 @@ inline double timeDifference(Timestamp high, Timestamp low)
   return static_cast<double>(diff) / Timestamp::kMicroSecondsPerSecond;
 }
 
-///
 /// Add @c seconds to given timestamp.
-///
 /// @return timestamp+seconds as Timestamp
 ///// Timestamp只有一个原子性整数的成员 所以相当于一个整数64bit中占8bit 直接读取寄存器效率比较高所以不需要用引用
 inline Timestamp addTime(Timestamp timestamp, double seconds) 
