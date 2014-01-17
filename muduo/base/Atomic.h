@@ -1,8 +1,3 @@
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-//
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #ifndef MUDUO_BASE_ATOMIC_H
 #define MUDUO_BASE_ATOMIC_H
 
@@ -22,18 +17,6 @@ class AtomicIntegerT : boost::noncopyable
     : value_(0)
   {
   }
-
-  // uncomment if you need copying and assignment // 如果你需要拷贝可以取消注释
-  //
-  // AtomicIntegerT(const AtomicIntegerT& that)
-  //   : value_(that.get())
-  // {}
-  //
-  // AtomicIntegerT& operator=(const AtomicIntegerT& that)
-  // {
-  //   getAndSet(that.get());
-  //   return *this;
-  // }
 
   T get()
   {
@@ -85,8 +68,8 @@ class AtomicIntegerT : boost::noncopyable
 };
 }
 
-typedef detail::AtomicIntegerT<int32_t> AtomicInt32;
-typedef detail::AtomicIntegerT<int64_t> AtomicInt64;
+typedef detail::AtomicIntegerT<int32_t> AtomicInt32; // 32位整数的实例化
+typedef detail::AtomicIntegerT<int64_t> AtomicInt64; // 64位整数的实例化
 }
 
 #endif  // MUDUO_BASE_ATOMIC_H

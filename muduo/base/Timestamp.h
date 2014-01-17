@@ -6,18 +6,12 @@
 
 #include <boost/operators.hpp>
 
-// 测试下 好不好用 这玩意
-// 测试下git和eclipse的配合使用怎么样 感觉还不错嘛
 
 namespace muduo
 {
 
-///
 /// Time stamp in UTC, in microseconds resolution.
-///
-/// This class is immutable.
-/// It's recommended to pass it by value, since it's passed in register on x64.
-///
+
 class Timestamp : public muduo::copyable,
                   public boost::less_than_comparable<Timestamp>
 {
@@ -30,10 +24,6 @@ class Timestamp : public muduo::copyable,
   {
   }
 
-  ///
-  /// Constucts a Timestamp at specific time
-  ///
-  /// @param microSecondsSinceEpoch
   explicit Timestamp(int64_t microSecondsSinceEpoch);
 
   void swap(Timestamp& that)
