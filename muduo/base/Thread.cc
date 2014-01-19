@@ -21,12 +21,13 @@
 namespace muduo
 {
 // 线程真实pid(tid)的缓存 是为了减少::syscall(SYS_gettid)的调用 提高获取tid的效率
-
+// 这里的变量加了__thread 表示是本现场内的局部数据 不被其他线程锁共享
 namespace CurrentThread // 这里是初始化
 {
   __thread int t_cachedTid = 0;  // __thread 修饰的变量时线程局部存储的 
   __thread char t_tidString[32]; // 这是tid的字符串表示形式
   __thread const char* t_threadName = "unknown";
+
   const bool sameType = boost::is_same<int, pid_t>::value; // 判断这两个类型是否相等
   BOOST_STATIC_ASSERT(sameType);
 }
@@ -36,7 +37,7 @@ namespace detail
 
 pid_t gettid()
 {
-  return static_cast<pid_t>(::syscall(SYS_gettid));
+  return static_cast<pid_t>(::syscall(SYS_gettid)); // ::syscall(SYS_gettid) 系统调用得到线程id
 }
 
 void afterFork()
@@ -68,7 +69,7 @@ void CurrentThread::cacheTid()
 {
   if (t_cachedTid == 0)
   {
-    t_cachedTid = detail::gettid();
+    t_cachedTid = detail::gettid(); // 调用gettid()函数得到当前线程的id
 	// 实际是:return static_cast<pid_t>(::syscall(SYS_gettid)); 这样得到tid
 
 	// 将可变个参数(...)按照format格式化成字符串，然后将其复制到str中
@@ -113,7 +114,7 @@ void Thread::start()
 int Thread::join()
 {
   assert(started_);
-  return pthread_join(pthreadId_, NULL);
+  return pthread_join(pthreadId_, NULL); // 等待线程退出
 }
 
 void* Thread::startThread(void* obj)
@@ -129,7 +130,7 @@ void Thread::runInThread()
   muduo::CurrentThread::t_threadName = name_.c_str();
   try
   {
-    func_();
+    func_(); // 运行绑定的线程函数
     muduo::CurrentThread::t_threadName = "finished";
   }
   catch (const Exception& ex)

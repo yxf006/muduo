@@ -35,7 +35,7 @@ class Thread : boost::noncopyable
   static int numCreated() { return numCreated_.get(); }
 
  private:
-  static void* startThread(void* thread);
+  static void* startThread(void* thread); //因为我们使用的是C API所以需要所以没有this指针的静态成员函数
   void runInThread();
 
   bool       started_;
@@ -44,7 +44,7 @@ class Thread : boost::noncopyable
   ThreadFunc func_;
   string     name_;
 
-  static AtomicInt32 numCreated_;
+  static AtomicInt32 numCreated_; // 静态数据成员 记录线程创建的个数
 };
 
 }

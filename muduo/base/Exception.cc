@@ -36,7 +36,7 @@ const char* Exception::stackTrace() const throw()
 {
   return stack_.c_str();
 }
-
+// 栈回溯的实现
 void Exception::fillStackTrace()
 {
   const int len = 200;
