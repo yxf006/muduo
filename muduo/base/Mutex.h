@@ -28,6 +28,8 @@ class MutexLock : boost::noncopyable          // 对Mutex的封装
   {
     assert(holder_ == 0);                     // 使用assert提高程序的健壮性
     int ret = pthread_mutex_destroy(&mutex_); // destory
+
+    // 这里这样写是因为 我们将没有使用的变量这种警告设为了错误 需要这里使用下 assert在release版本中不会出现
     assert(ret == 0); (void) ret;
   }
 
@@ -63,11 +65,10 @@ class MutexLock : boost::noncopyable          // 对Mutex的封装
  private:
 
   pthread_mutex_t mutex_;
-  pid_t holder_;
+  pid_t holder_; // 拥有锁的线程id
 };
 
-// 对MutexLock进行封装 利用类的析构函数可以防止我们解锁
-
+// 对MutexLock进行封装 利用类的析构函数来释放锁 可以防止我们解锁
 class MutexLockGuard : boost::noncopyable 
 {
  public:

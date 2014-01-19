@@ -29,10 +29,7 @@ class CountDownLatch : boost::noncopyable // ¶ÔMutexLock ConditionµÄ·â×° ËûÃÇĞèÒ
 
  private:
   mutable MutexLock mutex_;
-  // ÕâÀï¼ÓmutableµÄÔ­ÒòÊÇ   int getCount() const; 
-  // ±¾Éí²»ÄÜ¸Ä±ä±äÁ¿ĞèÒª¼Ómutable²ÅÄÜ¸Ä±ämutex_À´¸Ä±ä
-  // ÔÚC++ÖĞ£¬mutableÒ²ÊÇÎªÁËÍ»ÆÆconstµÄÏŞÖÆ¶øÉèÖÃµÄ¡£
-  // ±»mutableĞŞÊÎµÄ±äÁ¿£¬½«ÓÀÔ¶´¦ÓÚ¿É±äµÄ×´Ì¬£¬¼´Ê¹ÔÚÒ»¸öconstº¯ÊıÖĞ¡£
+  // ÕâÀï¼ÓmutableµÄÔ­ÒòÊÇ   int getCount() const; ±¾Éí²»ÄÜ¸Ä±ä±äÁ¿ĞèÒª¼Ómutable²ÅÄÜ¸Ä±ämutex_À´¸Ä±ä
   Condition condition_;
   int count_;
 };

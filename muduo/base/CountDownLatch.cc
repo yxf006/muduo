@@ -14,7 +14,7 @@ CountDownLatch::CountDownLatch(int count)
 {
 }
 
-void CountDownLatch::wait()
+void CountDownLatch::wait() // 当count_>0表示还有线程没有启动完成wait函数阻塞 继续等待到全部启动完成了
 {
   MutexLockGuard lock(mutex_);
   while (count_ > 0) {
@@ -22,18 +22,18 @@ void CountDownLatch::wait()
   }
 }
 
-void CountDownLatch::countDown()
+void CountDownLatch::countDown() // 每有一个线程完成启动 调用一次 次数减一 知道所有的都启动了
 {
   MutexLockGuard lock(mutex_);
   --count_;
   if (count_ == 0) {
-    condition_.notifyAll();
+    condition_.notifyAll(); // 线程全部启动了 通知wait函数不用等待了 不用再阻塞了
   }
 }
 
-int CountDownLatch::getCount() const
+int CountDownLatch::getCount() const // 返回等待的数量
 {
-  MutexLockGuard lock(mutex_); // 这里会调用unlock改变mutex_的状态
+  MutexLockGuard lock(mutex_); // 这里会调用unlock改变mutex_的状态 这个是对mutex_的RAII封装
   return count_;
 }
 
