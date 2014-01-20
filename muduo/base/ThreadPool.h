@@ -31,7 +31,7 @@ class ThreadPool : boost::noncopyable
   void start(int numThreads); // 实现的为固定个数的线程池
   void stop();
 
-  void run(const Task& f);
+  void run(const Task& f); // 添加任务
 
  private:
   void runInThread();
@@ -40,8 +40,8 @@ class ThreadPool : boost::noncopyable
   MutexLock mutex_;
   Condition cond_;
   string name_;
-  boost::ptr_vector<muduo::Thread> threads_;
-  std::deque<Task> queue_; // 这里的Task都是任务函数
+  boost::ptr_vector<muduo::Thread> threads_; // 线程组
+  std::deque<Task> queue_;   //  任务队列
   bool running_;
 };
 

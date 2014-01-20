@@ -44,7 +44,7 @@ void threadFunc(const char* changeTo)
 
 int main()
 {
-  muduo::ThreadLocalSingleton<Test>::instance().setName("main one");
+  muduo::ThreadLocalSingleton<Test>::instance().setName("main one"); // 单例模式的线程局部存储类
   muduo::Thread t1(boost::bind(threadFunc, "thread1"));
   muduo::Thread t2(boost::bind(threadFunc, "thread2"));
   t1.start();

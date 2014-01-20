@@ -18,28 +18,27 @@ class ThreadLocal : boost::noncopyable
  public:
   ThreadLocal()
   {
-    pthread_key_create(&pkey_, &ThreadLocal::destructor); 
+    pthread_key_create(&pkey_, &ThreadLocal::destructor); // 注册一个销毁函数 销毁线程特定数据
   }
 
   ~ThreadLocal()
   {
-    pthread_key_delete(pkey_);
+    pthread_key_delete(pkey_); // 仅仅是线程key 不是删除线程特定数据
   }
-
   T& value()
   {
     T* perThreadValue = static_cast<T*>(pthread_getspecific(pkey_));
     if (!perThreadValue) {
       T* newObj = new T();
-      pthread_setspecific(pkey_, newObj);  // 保存的是newobj
+      pthread_setspecific(pkey_, newObj);  // 保存的是newobj 这样就是局部存储了
       perThreadValue = newObj;
     }
-    return *perThreadValue;
+    return *perThreadValue; // 取值返回
   }
 
  private:
 
-  static void destructor(void *x)
+  static void destructor(void *x)// 销毁线程特定数据
   {
     T* obj = static_cast<T*>(x);
     typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1]; // 类型完全的检测
@@ -47,7 +46,7 @@ class ThreadLocal : boost::noncopyable
   }
 
  private:
-  pthread_key_t pkey_;
+  pthread_key_t pkey_; // 局部存储的key
 };
 
 }

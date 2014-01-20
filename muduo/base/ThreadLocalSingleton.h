@@ -25,7 +25,7 @@ class ThreadLocalSingleton : boost::noncopyable // 线程存储的单例模式类
       t_value_ = new T();  
       deleter_.set(t_value_); // 创建并且将t_value_保存起来
     }
-    return *t_value_;
+    return *t_value_; // 返回对象的引用
   }
 
   static T* pointer()
@@ -43,7 +43,7 @@ class ThreadLocalSingleton : boost::noncopyable // 线程存储的单例模式类
     t_value_ = 0;
   }
 
-  class Deleter // 嵌套类
+  class Deleter // 嵌套类 用于删除线程局部数据
   {
    public:
     Deleter()
@@ -65,7 +65,7 @@ class ThreadLocalSingleton : boost::noncopyable // 线程存储的单例模式类
     pthread_key_t pkey_;
   };
 
-  static __thread T* t_value_;
+  static __thread T* t_value_; // __thread 指明了为线程本地存储
   static Deleter deleter_;
 };
 

@@ -27,7 +27,7 @@ class Test : boost::noncopyable
   std::string name_;
 };
 
-#define STL muduo::Singleton<muduo::ThreadLocal<Test> >::instance().value()
+#define STL muduo::Singleton<muduo::ThreadLocal<Test> >::instance().value() // 单例模式类
 
 void print()
 {

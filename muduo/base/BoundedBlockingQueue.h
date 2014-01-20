@@ -1,8 +1,3 @@
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-//
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #ifndef MUDUO_BASE_BOUNDEDBLOCKINGQUEUE_H
 #define MUDUO_BASE_BOUNDEDBLOCKINGQUEUE_H
 
@@ -33,24 +28,24 @@ class BoundedBlockingQueue : boost::noncopyable
     MutexLockGuard lock(mutex_);
     while (queue_.full())
     {
-      notFull_.wait();
+      notFull_.wait(); // 队列满了不能写入 阻塞等待
     }
     assert(!queue_.full());
     queue_.push_back(x);
-    notEmpty_.notify(); // TODO: move outside of lock 通知有数据了 可读
+    notEmpty_.notify(); //  写入数据不为空了
   }
 
   T take()
   {
     MutexLockGuard lock(mutex_);
-    while (queue_.empty())
+    while (queue_.empty()) // 队列为空不能取出 阻塞等待
     {
       notEmpty_.wait();
     }
     assert(!queue_.empty());
     T front(queue_.front());
     queue_.pop_front();
-    notFull_.notify(); // TODO: move outside of lock 通知不满 可写
+    notFull_.notify(); // 取出数据 通知队列不满可以写入了
     return front;
   }
 
@@ -77,12 +72,12 @@ class BoundedBlockingQueue : boost::noncopyable
     MutexLockGuard lock(mutex_);
     return queue_.capacity();
   }
-
+// 本质就是生产者-消费者模型
  private:
   mutable MutexLock          mutex_;
-  Condition                  notEmpty_;
-  Condition                  notFull_;
-  boost::circular_buffer<T>  queue_;    // 环形缓冲区
+  Condition                  notEmpty_; // 判断是否非空 非空可读
+  Condition                  notFull_;  // 判断是否不满 不满可写
+  boost::circular_buffer<T>  queue_;    // 使用了boost库的环形缓冲区
 };
 
 }

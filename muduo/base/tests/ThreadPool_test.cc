@@ -26,12 +26,12 @@ int main()
   {
     char buf[32];
     snprintf(buf, sizeof buf, "task %d", i);
-    pool.run(boost::bind(printString, std::string(buf)));
+    pool.run(boost::bind(printString, std::string(buf))); //添加线程任务
   }
 
   muduo::CountDownLatch latch(1);
   pool.run(boost::bind(&muduo::CountDownLatch::countDown, &latch));
-  latch.wait();
+  latch.wait();  // 等待所有线程启动
   pool.stop();
 }
 

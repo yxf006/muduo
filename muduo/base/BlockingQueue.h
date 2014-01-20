@@ -29,7 +29,7 @@ class BlockingQueue : boost::noncopyable
 
   void put(const T& x)
   {
-    MutexLockGuard lock(mutex_); /* 对队列进行保护 */
+    MutexLockGuard lock(mutex_); // 对队列进行保护
     queue_.push_back(x);
     notEmpty_.notify(); // TODO: move outside of lock 通知等待的线程 实现线程同步
   }
@@ -55,9 +55,9 @@ class BlockingQueue : boost::noncopyable
   }
 
  private:
-  mutable MutexLock mutex_;    // Mutex
-  Condition         notEmpty_; // 条件变量
-  std::deque<T>     queue_;
+  mutable MutexLock mutex_;    // Mutex mutable 因为有些成员函数需要释放锁 改变它的姿态
+  Condition         notEmpty_;  // 条件变量
+  std::deque<T>     queue_;     // 使用了标准库的deque<T>双端队列
 };
 
 }

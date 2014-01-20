@@ -29,11 +29,12 @@ ThreadPool::~ThreadPool()
   }
 }
 
-void ThreadPool::start(int numThreads)
+void ThreadPool::start(int numThreads) // 创建线程
 {
   assert(threads_.empty());
   running_ = true;
-  threads_.reserve(numThreads); // must
+
+  threads_.reserve(numThreads); // must 必须设置数目为 numThreads
   for (int i = 0; i < numThreads; ++i)
   {
     char id[32];
@@ -49,22 +50,22 @@ void ThreadPool::stop()
   {
   MutexLockGuard lock(mutex_);
   running_ = false;
-  cond_.notifyAll();
+  cond_.notifyAll(); // 通知所有的等待线程 解除阻塞
   }
   for_each(threads_.begin(),
            threads_.end(),
-           boost::bind(&muduo::Thread::join, _1)); // wait for every pthread stop
+           boost::bind(&muduo::Thread::join, _1)); //  等待所有的线程退出
 }
 
 void ThreadPool::run(const Task& task) // 运行任务 Task(function)
 {
-  if (threads_.empty())     // 线程队列为空 没有线程运行 则直接用主线程(进程)运行
+  if (threads_.empty())
   {
-    task();
+    task(); // 线程队列为空 没有线程运行 则直接用主线程(进程)运行
   }
-  else                      // 否则将任务添加到任务队列通知所有的等待线程
+  else
   {
-    MutexLockGuard lock(mutex_);
+    MutexLockGuard lock(mutex_);// 否则将任务添加到任务队列通知所有的等待线程
     queue_.push_back(task); 
     cond_.notify(); // 通知有task了 可以取出执行 实现线程间的同步
   }
@@ -73,11 +74,13 @@ void ThreadPool::run(const Task& task) // 运行任务 Task(function)
 ThreadPool::Task ThreadPool::take()
 {
   MutexLockGuard lock(mutex_);
+
   // always use a while-loop, due to spurious wakeup
-  while (queue_.empty() && running_) // 任务到来 或者线程池结束 不再等待跳出循环
+  while (queue_.empty() && running_)
   {
-    cond_.wait(); // 有task了 不再阻塞
+    cond_.wait(); // // 任务到来或者线程池结束 不再等待跳出循环 有task了 不再阻塞
   }
+
   Task task;
   if(!queue_.empty())
   {

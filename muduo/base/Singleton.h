@@ -19,7 +19,7 @@ class Singleton : boost::noncopyable
  public:
   static T& instance()
   {
-    pthread_once(&ponce_, &Singleton::init); // 保证了init这个函数只会调用一次
+    pthread_once(&ponce_, &Singleton::init); // 保证了Singleton::init()函数只会调用一次 保证了线程安全
     return *value_;
   }
 
@@ -35,17 +35,19 @@ class Singleton : boost::noncopyable
 
   static void destroy()
   {
-    typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1]; // 这个技巧保证了类型完全
+	// 这个技巧保证了类型完全 C语言不能声明-1 大小的数组 比如: class name;就是一个不完整的类型
+    typedef char T_must_be_complete_type[sizeof(T) == 0 ? -1 : 1];
     delete value_;
   }
 
  private:
   static pthread_once_t ponce_;
-  static T*             value_;
+  static T*             value_; // 静态的保证了内存中只有一份 即单例的
 };
 
 template<typename T>
 pthread_once_t Singleton<T>::ponce_ = PTHREAD_ONCE_INIT; // must init static
+// 这里是静态的全局声明的 ponce_ 需要PTHREAD_ONCE_INIT来初始化 成员变量要用init()函数来初始化
 
 template<typename T>
 T* Singleton<T>::value_ = NULL;			// must init static
