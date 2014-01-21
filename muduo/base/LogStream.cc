@@ -12,7 +12,7 @@
 using namespace muduo;
 using namespace muduo::detail;
 
-#pragma GCC diagnostic ignored "-Wtype-limits"
+#pragma GCC diagnostic ignored "-Wtype-limits" // 忽略编译时的这个警告
 //#pragma GCC diagnostic error "-Wtype-limits"
 namespace muduo
 {
@@ -48,8 +48,8 @@ size_t convert(char buf[], T value) // 将T(十进制整型)类型转换成string
 
   return p - buf;
 }
-
-size_t convertHex(char buf[], uintptr_t value) // 将T(十六进制整型)类型转换成string
+// 将T(十六进制整型)类型转换成string
+size_t convertHex(char buf[], uintptr_t value)
 {
   uintptr_t i = value;
   char* p = buf;
@@ -101,7 +101,7 @@ void LogStream::staticCheck()
 template<typename T>
 void LogStream::formatInteger(T v)            // 将整型的数格式化成字符串添加到buff中
 {
-  if (buffer_.avail() >= kMaxNumericSize)
+  if (buffer_.avail() >= kMaxNumericSize) // 可用空间大于等于32
   {
     size_t len = convert(buffer_.current(), v);
     buffer_.add(len);  
@@ -159,9 +159,9 @@ LogStream& LogStream::operator<<(unsigned long long v)
 // uintptr 对于32位平台来说是unsigned int
 // uintptr 对于64位平台来说是unsigned long int
 
-LogStream& LogStream::operator<<(const void* p)
+LogStream& LogStream::operator<<(const void* p) // 写入一个地址
 {
-  uintptr_t v = reinterpret_cast<uintptr_t>(p);
+  uintptr_t v = reinterpret_cast<uintptr_t>(p); // 编译器不支持的指针转换
   if (buffer_.avail() >= kMaxNumericSize)
   {
     char* buf = buffer_.current();

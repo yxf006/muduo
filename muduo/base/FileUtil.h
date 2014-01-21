@@ -45,7 +45,7 @@ namespace FileUtil
    private:
     int fd_;
     int err_;
-    char buf_[kBufferSize];
+    char buf_[kBufferSize]; // ÎÄ¼þ»º³åÇø
   };
 
   // read the file content, returns errno if error happens.

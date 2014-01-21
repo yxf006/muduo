@@ -84,7 +84,7 @@ int FileUtil::SmallFile::readToString(int maxSize,
     while (content->size() < implicit_cast<size_t>(maxSize))
     {
       size_t toRead = std::min(implicit_cast<size_t>(maxSize) - content->size(), sizeof(buf_));
-      ssize_t n = ::read(fd_, buf_, toRead);
+      ssize_t n = ::read(fd_, buf_, toRead); // ¶ÁÎÄ¼þ
       if (n > 0)
       {
         content->append(buf_, n);

@@ -15,7 +15,7 @@
 
 namespace muduo {
 
-class StringPiece {
+class StringPiece { // google 高效字符串的实现
  private:
   const char*   ptr_;
   int           length_;

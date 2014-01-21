@@ -30,7 +30,7 @@ class LogFile::File : boost::noncopyable       		// 这里的class File是一个嵌套类
   {
     size_t n = write(logline, len);
     size_t remain = len - n;
-    while (remain > 0)
+    while (remain > 0) // 循环写入
     {
       size_t x = write(logline + n, remain);
       if (x == 0)
@@ -61,7 +61,7 @@ class LogFile::File : boost::noncopyable       		// 这里的class File是一个嵌套类
   size_t write(const char* logline, size_t len)     // 写入日志内容到文件
   {
 #undef fwrite_unlocked
-    return ::fwrite_unlocked(logline, 1, len, fp_);
+    return ::fwrite_unlocked(logline, 1, len, fp_); // 不加锁 效率高些
   }
 
   FILE* fp_;
@@ -130,7 +130,7 @@ void LogFile::append_unlocked(const char* logline, int len) // 核心函数 无锁添加
     {
       count_ = 0;
       time_t now = ::time(NULL);
-      time_t thisPeriod_ = now / kRollPerSeconds_ * kRollPerSeconds_;
+      time_t thisPeriod_ = now / kRollPerSeconds_ * kRollPerSeconds_; // 对齐
       if (thisPeriod_ != startOfPeriod_) // 与开始的时间间隔不相同说明是第二天更新日志文件
       {
         rollFile();
@@ -138,7 +138,7 @@ void LogFile::append_unlocked(const char* logline, int len) // 核心函数 无锁添加
       else if (now - lastFlush_ > flushInterval_) // 距离上次写入的时间和时间间隔比较
       {
         lastFlush_ = now;
-        file_->flush(); // 写入
+        file_->flush(); // 写入 超过flush的间隔时间
       }
     }
     else
@@ -148,11 +148,11 @@ void LogFile::append_unlocked(const char* logline, int len) // 核心函数 无锁添加
   }
 }
 
-void LogFile::rollFile()
+void LogFile::rollFile() // 写入到文件中
 {
   time_t now = 0;
   string filename = getLogFileName(basename_, &now); // 获取文件名称和时间
-  time_t start = now / kRollPerSeconds_ * kRollPerSeconds_; 
+  time_t start = now / kRollPerSeconds_ * kRollPerSeconds_; // 对齐kRollPerSeconds_ 调整至当前零点
 
   // 对齐kRollPerSeconds_整数倍调整到当天的零点得到时间
 
@@ -177,6 +177,7 @@ string LogFile::getLogFileName(const string& basename, time_t* now)
   *now = time(NULL);
   gmtime_r(now, &tm); // FIXME: localtime_r ? GMT(UTC)时间距离1970年的秒数
   // gmtime不是线程安全的 tm 对象保存了返回的时间
+  // GMT 时间
   
   strftime(timebuf, sizeof timebuf, ".%Y%m%d-%H%M%S.", &tm); // 将时间格式化
   filename += timebuf;

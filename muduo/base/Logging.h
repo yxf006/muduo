@@ -76,7 +76,7 @@ class Logger
 
  private:
 
-class Impl 				//嵌套类 保存了基本信息
+class Impl 	//嵌套类  Impl隐藏信息的手法 这个类才是真正的实现
 {
  public:
   typedef Logger::LogLevel LogLevel;
@@ -85,7 +85,7 @@ class Impl 				//嵌套类 保存了基本信息
   void finish();        // 最后将string格式化写入缓冲区 
 
   Timestamp time_;      // 时间
-  LogStream stream_;    // 缓存区
+  LogStream stream_;    // 日志的缓存区
   LogLevel level_;      // 等级
   int line_;            // 行
   SourceFile basename_; // 名字
@@ -102,13 +102,16 @@ inline Logger::LogLevel Logger::logLevel()
   return g_logLevel;
 }
 
-// 外部使用调用这几个宏
+// 外部使用调用这几个宏 来输出日志
 #define LOG_TRACE if (muduo::Logger::logLevel() <= muduo::Logger::TRACE) \
   muduo::Logger(__FILE__, __LINE__, muduo::Logger::TRACE, __func__).stream()
+
 #define LOG_DEBUG if (muduo::Logger::logLevel() <= muduo::Logger::DEBUG) \
   muduo::Logger(__FILE__, __LINE__, muduo::Logger::DEBUG, __func__).stream()
+
 #define LOG_INFO if (muduo::Logger::logLevel() <= muduo::Logger::INFO) \
   muduo::Logger(__FILE__, __LINE__).stream()
+
 #define LOG_WARN muduo::Logger(__FILE__, __LINE__, muduo::Logger::WARN).stream()
 #define LOG_ERROR muduo::Logger(__FILE__, __LINE__, muduo::Logger::ERROR).stream()
 #define LOG_FATAL muduo::Logger(__FILE__, __LINE__, muduo::Logger::FATAL).stream()

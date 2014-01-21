@@ -10,27 +10,11 @@
 
 #include <sstream>
 
-namespace muduo // 一些杂项
+namespace muduo
 {
 
-/*
-class LoggerImpl
-{
- public:
-  typedef Logger::LogLevel LogLevel;
-  LoggerImpl(LogLevel level, int old_errno, const char* file, int line);
-  void finish();
 
-  Timestamp time_;
-  LogStream stream_;
-  LogLevel level_;
-  int line_;
-  const char* fullname_;
-  const char* basename_;
-};
-*/
-
-__thread char t_errnobuf[512];
+__thread char t_errnobuf[512]; // 线程局部存储的一些数据
 __thread char t_time[32];
 __thread time_t t_lastSecond;
 
@@ -90,7 +74,7 @@ inline LogStream& operator<<(LogStream& s, const Logger::SourceFile& v)
   return s;
 }
 
-void defaultOutput(const char* msg, int len)
+void defaultOutput(const char* msg, int len) // 默认写到标准输出1中
 {
   size_t n = fwrite(msg, 1, len, stdout);
   //FIXME check n
@@ -102,11 +86,11 @@ void defaultFlush()
   fflush(stdout);
 }
 
-Logger::OutputFunc g_output = defaultOutput;
+Logger::OutputFunc g_output = defaultOutput; // 默认的输出 默认的刷新缓冲区
 Logger::FlushFunc g_flush = defaultFlush;
 
 }
-
+// ----------------------- 真正的实现 ----------------------
 using namespace muduo;
 
 Logger::Impl::Impl(LogLevel level, int savedErrno, const SourceFile& file, int line)
@@ -116,9 +100,10 @@ Logger::Impl::Impl(LogLevel level, int savedErrno, const SourceFile& file, int l
     line_(line),
     basename_(file)
 {
-  formatTime();			// 格式化当前时间
-  CurrentThread::tid(); // 缓存下的当前线程的id
-  stream_ << T(CurrentThread::tidString(), 6);
+// ----------------时间：---- 线程ID: ---------- 日志等级 ----------------- 格式化到缓冲区中
+  formatTime();			    // 格式化当前时间
+  CurrentThread::tid();     // 缓存下的当前线程的id
+  stream_ << T(CurrentThread::tidString(), 6); // 将这些日志信息缓存到缓冲区中
   stream_ << T(LogLevelName[level], 6);
   if (savedErrno != 0)
   {
@@ -160,7 +145,7 @@ Logger::Logger(SourceFile file, int line)
 Logger::Logger(SourceFile file, int line, LogLevel level, const char* func)
   : impl_(level, 0, file, line)
 {
-  impl_.stream_ << func << ' ';
+  impl_.stream_ << func << ' '; // 函数名称也格式化进去
 }
 
 Logger::Logger(SourceFile file, int line, LogLevel level)
@@ -192,7 +177,7 @@ void Logger::setLogLevel(Logger::LogLevel level)
   g_logLevel = level;
 }
 
-void Logger::setOutput(OutputFunc out)
+void Logger::setOutput(OutputFunc out) // 只需要更改输出函数 设置为输出到文件中即可
 {
   g_output = out;
 }

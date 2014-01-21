@@ -19,6 +19,7 @@ namespace detail // 内部使用的 对外不可见
 const int kSmallBuffer = 4000;      	// 小buffer的大小
 const int kLargeBuffer = 4000*1000; 	// 大buffer的大小
 
+// 缓冲区 FixedBuffer 的实现
 // SIZE 是非类型参数
 template<int SIZE>
 class FixedBuffer : boost::noncopyable  // 缓冲区
@@ -45,7 +46,7 @@ class FixedBuffer : boost::noncopyable  // 缓冲区
     }
   }
 
-  const char* data() const { return data_; } 					// 起始位置
+  const char* data() const { return data_; } 					    // 起始位置
   int length() const { return static_cast<int>(cur_ - data_); } // 已经使用的空间
 
   // write to data_ directly
@@ -70,12 +71,13 @@ class FixedBuffer : boost::noncopyable  // 缓冲区
   static void cookieEnd();
 
   void (*cookie_)();
-  char data_[SIZE];       // buffer
-  char* cur_;
+  char data_[SIZE];       // buffer data_就是起始地址
+  char* cur_;             // 当前指针
 };
 
 } // end namespace detail
 
+// 缓冲区的真正实现
 class LogStream : boost::noncopyable
 {
   typedef LogStream self;
@@ -136,7 +138,7 @@ class LogStream : boost::noncopyable
   }
 #endif
 
-  self& operator<<(const StringPiece& v)
+  self& operator<<(const StringPiece& v) // 使用google的StringPiece类
   {
     buffer_.append(v.data(), v.size());
     return *this;
@@ -152,7 +154,7 @@ class LogStream : boost::noncopyable
   template<typename T>
   void formatInteger(T);
 
-  Buffer buffer_;                        // 缓冲区   
+  Buffer buffer_;           // 缓冲区
 
   static const int kMaxNumericSize = 32; 
 };
