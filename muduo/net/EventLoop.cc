@@ -33,7 +33,7 @@ const int kPollTimeMs = 10000; // 10s
 // eventfd用来线程间 通信 不用pipe socketpair
 int createEventfd()
 {
-  int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+  int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC); // 非阻塞的
   if (evtfd < 0)
   {
     LOG_SYSERR << "Failed in eventfd";
@@ -97,12 +97,11 @@ EventLoop::~EventLoop()
   t_loopInThisThread = NULL;
 }
 
-// 不能跨线程调用 只能在创建该对象的线程中调用
-// 调用通道中注册的IO处理函数 处理超时事件
-void EventLoop::loop()
+// 不能跨线程调用 只能在创建该对象的线程中调用 调用通道中注册的IO处理函数 处理超时事件
+ void EventLoop::loop()
 {
-  assert(!looping_);    // 断言是否处于事件循环中
-  assertInLoopThread(); // 断言是否处于创建该对象的线程中
+  assert(!looping_);    // 断言不处于事件循环
+  assertInLoopThread(); // 断言处于当前现场中
   looping_ = true;
   quit_ = false;
   LOG_TRACE << "EventLoop " << this << " start looping";

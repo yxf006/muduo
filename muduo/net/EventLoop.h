@@ -45,7 +45,7 @@ class EventLoop : boost::noncopyable
   ~EventLoop();  // force out-line dtor, for scoped_ptr members.
 
   ///
-  /// Loops forever. ²»ÄÜ¿çÏß³Ìµ÷ÓÃ Ö»ÄÜÔÚ´´½¨¸Ã¶ÔÏóµÄÏß³ÌÖĞµ÷ÓÃ
+  /// Loops forever. ä¸èƒ½è·¨çº¿ç¨‹è°ƒç”¨ åªèƒ½åœ¨åˆ›å»ºè¯¥å¯¹è±¡çš„çº¿ç¨‹ä¸­è°ƒç”¨
   ///
   /// Must be called in the same thread as creation of the object.
   ///
@@ -64,14 +64,14 @@ class EventLoop : boost::noncopyable
   /// It wakes up the loop, and run the cb.
   /// If in the same loop thread, cb is run within the function.
   /// Safe to call from other threads.
-  void runInLoop(const Functor& cb); // Ïß³ÌµÄÒì²½µ÷ÓÃ
+  void runInLoop(const Functor& cb); // çº¿ç¨‹çš„å¼‚æ­¥è°ƒç”¨
   
   /// Queues callback in the loop thread.
   /// Runs after finish pooling.
   /// Safe to call from other threads.
   void queueInLoop(const Functor& cb);
 
-  // timers ¶¨Ê±Æ÷
+  // timers å®šæ—¶å™¨
 
   ///
   /// Runs callback at 'time'.
@@ -96,8 +96,8 @@ class EventLoop : boost::noncopyable
 
   // internal usage
   void wakeup();
-  void updateChannel(Channel* channel); // ÔÚPOLLERÖĞ×¢²á»òÕß¸üĞÂÍ¨µÀ
-  void removeChannel(Channel* channel); // ÒÆ³ı
+  void updateChannel(Channel* channel); // åœ¨POLLERä¸­æ³¨å†Œæˆ–è€…æ›´æ–°é€šé“
+  void removeChannel(Channel* channel); // ç§»é™¤
 
   // pid_t threadId() const { return threadId_; }
   void assertInLoopThread()
@@ -108,7 +108,7 @@ class EventLoop : boost::noncopyable
     }
   }
 
-  // ¶Ô±ÈtidÊÇ·ñÏàµÈ
+  // å¯¹æ¯”tidæ˜¯å¦ç›¸ç­‰
   bool isInLoopThread() const { return threadId_ == CurrentThread::tid(); }
   // bool callingPendingFunctors() const { return callingPendingFunctors_; }
   bool eventHandling() const { return eventHandling_; }
@@ -122,29 +122,29 @@ class EventLoop : boost::noncopyable
 
   void printActiveChannels() const; // DEBUG
 
-  typedef std::vector<Channel*> ChannelList; // eventLoopÓëchannelµÄ¹ØÏµÊÇÒ»¶Ô¶à ¾ÛºÏ¹ØÏµ
+  typedef std::vector<Channel*> ChannelList; // eventLoopä¸channelçš„å…³ç³»æ˜¯ä¸€å¯¹å¤š èšåˆå…³ç³»
 
-  bool looping_; /* atomic */ // ÊÇ·ñ´¦ÓÚÊÂ¼şÑ­» ·ÖĞ
-  bool quit_; /* atomic */    // ÊÇ·ñÀë¿ªÊÂ¼şÑ­»·
+  bool looping_;  // æ˜¯å¦å¤„äºäº‹ä»¶å¾ªï¿½åˆ†ï¿½atomic
+  bool quit_;     // æ˜¯å¦ç¦»å¼€äº‹ä»¶å¾ªç¯ atomic
   bool eventHandling_;  /* atomic */
   bool callingPendingFunctors_; /* atomic */
   
   int64_t iteration_;
-  const pid_t threadId_;      // Ã¿Ò»¸öEventLoop¶ÔÓ¦Ò»¸öÏß³Ì Õâ¸ö¼ÇÂ¼¶ÔÓ¦µÄÏß³ÌID
-  Timestamp pollReturnTime_;  // Ê±¼ä´Á
+  const pid_t threadId_;      // æ¯ä¸€ä¸ªEventLoopå¯¹åº”ä¸€ä¸ªçº¿ç¨‹ è¿™ä¸ªè®°å½•å¯¹åº”çš„çº¿ç¨‹ID
+  Timestamp pollReturnTime_;  // æ—¶é—´æˆ³
   
   boost::scoped_ptr<Poller> poller_;         // Poller
-  boost::scoped_ptr<TimerQueue> timerQueue_; // ¶¨Ê±Æ÷¶ÓÁĞ
+  boost::scoped_ptr<TimerQueue> timerQueue_; // å®šæ—¶å™¨é˜Ÿåˆ—
   
-  int wakeupFd_; // ÓÃÓÚeventfd ÊµÏÖÏß³Ì¼äÍ¨ĞÅ
+  int wakeupFd_; // ç”¨äºeventfd å®ç°çº¿ç¨‹é—´é€šä¿¡
   // unlike in TimerQueue, which is an internal class,
   // we don't expose Channel to client.
-  // ¸ÃÍ¨µÀ½«»áÄÉÈëpoller_À´¹ÜÀí Ö»¸ºÔğÕâ¸öchannelµÄÉú´æÆÚ
+  // è¯¥é€šé“å°†ä¼šçº³å…¥poller_æ¥ç®¡ç† åªè´Ÿè´£è¿™ä¸ªchannelçš„ç”Ÿå­˜æœŸ
   boost::scoped_ptr<Channel> wakeupChannel_; 
-  ChannelList activeChannels_;               // ÊÂ¼şÍ¨µÀ
-  Channel* currentActiveChannel_;            // ÕıÔÚ´¦ÀíµÄ»î¶¯Í¨µÀ
+  ChannelList activeChannels_;               // äº‹ä»¶é€šé“
+  Channel* currentActiveChannel_;            // æ­£åœ¨å¤„ç†çš„æ´»åŠ¨é€šé“
   MutexLock mutex_;
-  std::vector<Functor> pendingFunctors_; // @BuardedBy mutex_ Ö´ĞĞÒ»Ğ©¼ÆËãÈÎÎñ
+  std::vector<Functor> pendingFunctors_; // @BuardedBy mutex_ æ‰§è¡Œä¸€äº›è®¡ç®—ä»»åŠ¡
 };
 
 }

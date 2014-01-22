@@ -25,6 +25,7 @@ class EchoServer
     : loop_(loop),
       server_(loop, listenAddr, "EchoServer")
   {
+    // 设置回调函数
     server_.setConnectionCallback(
         boost::bind(&EchoServer::onConnection, this, _1));
     server_.setMessageCallback(
@@ -61,11 +62,11 @@ class EchoServer
     {
       loop_->quit();
     }
-    conn->send(msg);
+    conn->send(msg); // 回射
   }
 
   EventLoop* loop_;
-  TcpServer server_;
+  TcpServer server_; // TCP服务器
 };
 
 int main(int argc, char* argv[])

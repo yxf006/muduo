@@ -25,19 +25,15 @@ namespace net
 
 class EventLoop;
 
-///
-/// A selectable I/O channel.
-///
-/// This class doesn't own the file descriptor. 不拥有文件描述符fd
-/// The file descriptor could be a socket,
-/// an eventfd, a timerfd, or a signalfd
+
+/// 不拥有文件描述符fd
 class Channel : boost::noncopyable // 用于注册或者回调IO事件
 {
  public:
-  typedef boost::function<void()> EventCallback;
-  typedef boost::function<void(Timestamp)> ReadEventCallback;
+  typedef boost::function<void()> EventCallback;              // 事件回调函数
+  typedef boost::function<void(Timestamp)> ReadEventCallback; // 读事件回调函数
 
-  Channel(EventLoop* loop, int fd); // 一个channel只属于一个EventLoop
+  Channel(EventLoop* loop, int fd); // 一个channel只属于一个EventLoop 一个EventLoop包含多个channel
   ~Channel();
 
   void handleEvent(Timestamp receiveTime);
@@ -97,12 +93,12 @@ class Channel : boost::noncopyable // 用于注册或者回调IO事件
   static const int kReadEvent;
   static const int kWriteEvent;
 
-  EventLoop* loop_;   		// 所属的EventLoop
+  EventLoop* loop_;   		// 所属的唯一EventLoop
   const int  fd_;     		// 所关注的fd 不负责关闭fd
   int        events_; 		// 关注的事件
   int        revents_;		// poll/epoll 返回的事件
   int        index_;  		// used by Poller. 表示在poll的事件数组中的序号 epoll中的状态
-  bool       logHup_; 		// for POLLHUP
+  bool       logHup_; 		// for POLLHUP 负责生存期
 
   boost::weak_ptr<void> tie_;      // 这是一个弱引用 用于对象生命期的控制 TcpConnection
   bool tied_;         			   // 生存期的控制

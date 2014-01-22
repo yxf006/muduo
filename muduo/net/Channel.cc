@@ -47,13 +47,13 @@ void Channel::tie(const boost::shared_ptr<void>& obj)
 
 void Channel::update()
 {
-  loop_->updateChannel(this);
+  loop_->updateChannel(this); // 调用 Poller 的 updateChannel
 }
 
 void Channel::remove()
 {
   assert(isNoneEvent());
-  loop_->removeChannel(this);
+  loop_->removeChannel(this);// 调用 Poller 的 updateChannel 在PollPoller类中实现
 }
 
 void Channel::handleEvent(Timestamp receiveTime)   // 可读写事件处理函数
@@ -64,7 +64,7 @@ void Channel::handleEvent(Timestamp receiveTime)   // 可读写事件处理函数
     guard = tie_.lock(); // 这里是对弱指针的一个提升
     if (guard)
     {
-      handleEventWithGuard(receiveTime);
+      handleEventWithGuard(receiveTime); // 调用提前注册的回调函数处理读写事件
     }
   }
   else
@@ -94,13 +94,14 @@ void Channel::handleEventWithGuard(Timestamp receiveTime)
   {
     if (errorCallback_) errorCallback_();
   }
-  if (revents_ & (POLLIN | POLLPRI | POLLRDHUP))   // 对等放调用close关闭连接 会受到POLLRDHUP
+  // POLLRDHUP 关闭连接或者关闭半连接
+  if (revents_ & (POLLIN | POLLPRI | POLLRDHUP))   // 对等放调用close关闭连接 会受到POLLRDHUP POLLPRI(带外数据)
   {
-    if (readCallback_) readCallback_(receiveTime);
+    if (readCallback_) readCallback_(receiveTime); // 产生可读事件 调用读函数
   }
-  if (revents_ & POLLOUT)                          // 可写事件的产生
+  if (revents_ & POLLOUT)
   {
-    if (writeCallback_) writeCallback_();
+    if (writeCallback_) writeCallback_();  // 可写事件的产生 调用写的回调函数
   }
   eventHandling_ = false;
 }

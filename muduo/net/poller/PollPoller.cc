@@ -27,11 +27,10 @@ PollPoller::~PollPoller()
 {
 }
 
+// 调用系统 ::poll
 Timestamp PollPoller::poll(int timeoutMs, ChannelList* activeChannels)
 {
-  // XXX pollfds_ shouldn't change
-  // 调用系统的poll 传入数组的首地址 关注这些fd的可读可写事件
-  // 这里传入的是地址 而不是间接地址指针
+ //  将返回的可读写事件保存在 pollfds_ 这个vector中
   int numEvents = ::poll(&*pollfds_.begin(), polclfds_.size(), timeoutMs); 
   Timestamp now(Timestamp::now());
   if (numEvents > 0) // 如果大于0将这些事件返回到IO通道中
@@ -49,50 +48,58 @@ Timestamp PollPoller::poll(int timeoutMs, ChannelList* activeChannels)
   }
   return now;
 }
-
+// 将可读写事件填充到fd对应的通道中
 void PollPoller::fillActiveChannels(int numEvents,
                                     ChannelList* activeChannels) const
 {
-// 遍历通道中的fds
+// 遍历通道中的 fd 填充到通道中
   for (PollFdList::const_iterator pfd = pollfds_.begin();
-      pfd != pollfds_.end() && numEvents > 0; ++pfd)
+                                           pfd != pollfds_.end() && numEvents > 0; ++pfd)
   {
     if (pfd->revents > 0) // 产生了事件 返回事件 
     {
       --numEvents;        // 处理事件
-      ChannelMap::const_iterator ch = channels_.find(pfd->fd);// 通过fd查找通道
+      // 需要先调用 updateChannel 再找对应的 Channel
+      ChannelMap::const_iterator ch = channels_.find(pfd->fd);// 通过 fd 查找通道
+
       assert(ch != channels_.end());
+
       Channel* channel = ch->second;      // 得到通道
       assert(channel->fd() == pfd->fd);
+
       channel->set_revents(pfd->revents);
       // pfd->revents = 0;
-      activeChannels->push_back(channel); // 将通道压入到活动通道中
+
+      activeChannels->push_back(channel); // 将通道压入到活动通道中 ChannelList通道列表在父类中定义
     }
   }
 }
 
-// 注册某个fd的可读可写事件或者更新
+// 注册某个fd的可读可写事件即向通道中注册事件 或者 更新
 void PollPoller::updateChannel(Channel* channel)
 {
   Poller::assertInLoopThread(); // EventLoop对应thread
   LOG_TRACE << "fd = " << channel->fd() << " events = " << channel->events();
   
-  if (channel->index() < 0) // 在数组中的位置未知 新的通道
+  if (channel->index() < 0) //  新的通道 数组中不存在
   {
     // a new one, add to pollfds_ 
     assert(channels_.find(channel->fd()) == channels_.end());
+
     struct pollfd pfd;
     pfd.fd = channel->fd();
     pfd.events = static_cast<short>(channel->events());
     pfd.revents = 0;
     pollfds_.push_back(pfd);
+
     int idx = static_cast<int>(pollfds_.size())-1; // vector容量
     channel->set_index(idx);     // 设置位置
-    channels_[pfd.fd] = channel; // 设置fd对应的channel_
+
+    channels_[pfd.fd] = channel; //  在map中插入 这个fd和对应的通道
   }
   else
   {
-    // update existing one 更新通道
+    // update existing one 更新通道关注的事件
     assert(channels_.find(channel->fd()) != channels_.end()); // 已经有的通道可以找到
     assert(channels_[channel->fd()] == channel);
 	
@@ -102,7 +109,7 @@ void PollPoller::updateChannel(Channel* channel)
     struct pollfd& pfd = pollfds_[idx];
     assert(pfd.fd == channel->fd() || pfd.fd == -channel->fd()-1);
 	
-    pfd.events = static_cast<short>(channel->events()); // 更新事件
+    pfd.events = static_cast<short>(channel->events()); // 更新fd事件
     pfd.revents = 0;
 
 	// 将一个通道暂时更改为不关注事件 但是不从Poller中移除该通道
@@ -116,7 +123,8 @@ void PollPoller::updateChannel(Channel* channel)
   }
 }
 
-void PollPoller::removeChannel(Channel* channel) // 移除fd对应的IO通道
+// 移除map中 fd对应的IO通道
+void PollPoller::removeChannel(Channel* channel)
 {
   Poller::assertInLoopThread();
   LOG_TRACE << "fd = " << channel->fd();
@@ -129,16 +137,19 @@ void PollPoller::removeChannel(Channel* channel) // 移除fd对应的IO通道
   const struct pollfd& pfd = pollfds_[idx]; (void)pfd;
   
   assert(pfd.fd == -channel->fd()-1 && pfd.events == channel->events());
-  size_t n = channels_.erase(channel->fd()); // 用key来同通道map中移除 
+
+  size_t n = channels_.erase(channel->fd()); // 用 key 来从 map 中移除
   assert(n == 1); (void)n;
   
-  if (implicit_cast<size_t>(idx) == pollfds_.size()-1) // 最后一个
+  // 从fd 数组中移除fd
+  if (implicit_cast<size_t>(idx) == pollfds_.size()-1) //
   {
-    pollfds_.pop_back();
+    pollfds_.pop_back(); // 是最后一个 从fd数组中pop移除该fd
   }
   else // 不是最后一个
   {
-  // 这里移除的算法复杂度为O(1) 由于没有顺序关系所以 将带移除的元素与最后一个元素交换再pop_back就好
+    // 这里移除的算法复杂度为O(1) 由于没有顺序关系所以
+	// 将带移除的元素与最后一个元素交换 再pop_back就好
     int channelAtEnd = pollfds_.back().fd;
     iter_swap(pollfds_.begin()+idx, pollfds_.end()-1); // swap: iter_swap
     if (channelAtEnd < 0)

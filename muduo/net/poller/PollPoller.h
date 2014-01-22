@@ -42,10 +42,10 @@ class PollPoller : public Poller // 子类实现了这些方法
                           ChannelList* activeChannels) const;
 
   typedef std::vector<struct pollfd> PollFdList;
-  typedef std::map<int, Channel*> ChannelMap; 
-  // key是fd value是Channel* fd对应Channel形成容器
+  typedef std::map<int, Channel*> ChannelMap; // fd <-> Channel* : map
+
   PollFdList pollfds_;
-  ChannelMap channels_;
+  ChannelMap channels_; // fd <-> channel fd 对应的通道map
 };
 
 }

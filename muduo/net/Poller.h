@@ -24,14 +24,10 @@ namespace net
 
 class Channel;
 
-///
-/// Base class for IO Multiplexing IO多路的基础类
-///
-/// This class doesn't own the Channel objects.
 class Poller : boost::noncopyable // 唯一使用继承的地方
 {
  public:
-  typedef std::vector<Channel*> ChannelList; // 仅仅的指针
+  typedef std::vector<Channel*> ChannelList; // 仅仅的指针 通道列表
 
   Poller(EventLoop* loop);
   virtual ~Poller();
