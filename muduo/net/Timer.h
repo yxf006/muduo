@@ -1,13 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-// This is an internal header file, you should not include this.
-
 #ifndef MUDUO_NET_TIMER_H
 #define MUDUO_NET_TIMER_H
 
@@ -21,9 +11,7 @@ namespace muduo
 {
 namespace net
 {
-///
-/// Internal class for timer event.
-///
+
 class Timer : boost::noncopyable // 对定时器的一个高度抽象
 {
  public:
@@ -50,9 +38,9 @@ class Timer : boost::noncopyable // 对定时器的一个高度抽象
 
  private:
   const TimerCallback callback_; // 定时器回调函数
-  Timestamp expiration_;         // 届期 下一次的超时时刻
-  const double interval_;        // 超时间隔 如果是一次性定时器为0
-  const bool repeat_;		     // 是否重复
+  Timestamp expiration_;          // 届期 下一次的超时时刻
+  const double interval_;        // 超时间隔 如果是一次性定时器为 这个值为0
+  const bool repeat_;		      // 是否重复
   const int64_t sequence_;       // 定时器序号
 
   static AtomicInt64 s_numCreated_; // 定时器计数 当前已经创建的定时器数量

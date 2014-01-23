@@ -17,7 +17,7 @@ void Timer::restart(Timestamp now)
 {
   if (repeat_)
   {
-    expiration_ = addTime(now, interval_); // 这里的addTime函数杂TimeStamp中定义
+    expiration_ = addTime(now, interval_); // 当前时间+出发时间间隔
   }
   else
   {

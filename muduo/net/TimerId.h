@@ -40,10 +40,10 @@ class TimerId : public muduo::copyable
 
   // default copy-ctor, dtor and assignment are okay
 
-  friend class TimerQueue;
+  friend class TimerQueue; // 定时器队列
 
  private:
-  Timer* timer_;     // 定时器地址
+  Timer* timer_;     // 定时器起始地址
   int64_t sequence_; // 定时器的序号key
 };
 

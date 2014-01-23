@@ -1,11 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #define __STDC_LIMIT_MACROS
 #include <muduo/net/TimerQueue.h>
 
@@ -25,11 +17,10 @@ namespace net
 namespace detail
 {
 
-// 调用timerfd_create创建定时器
 int createTimerfd()
 {
-  int timerfd = ::timerfd_create(CLOCK_MONOTONIC,
-                                 TFD_NONBLOCK | TFD_CLOEXEC);
+  int timerfd = ::timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);// 调用timerfd_create创建定时器
+
   if (timerfd < 0)
   {
     LOG_SYSFATAL << "Failed in timerfd_create";
@@ -52,7 +43,6 @@ struct timespec howMuchTimeFromNow(Timestamp when) // 类型转换函数
       (microseconds % Timestamp::kMicroSecondsPerSecond) * 1000);
   return ts;
 }
-
 // 调用read清除数据 否则会一直触发 LT 
 void readTimerfd(int timerfd, Timestamp now)
 {
@@ -64,7 +54,7 @@ void readTimerfd(int timerfd, Timestamp now)
     LOG_ERROR << "TimerQueue::handleRead() reads " << n << " bytes instead of 8";
   }
 }
-
+// 重设定时器fd
 void resetTimerfd(int timerfd, Timestamp expiration)
 {
   // wake up loop by timerfd_settime()
@@ -80,11 +70,7 @@ void resetTimerfd(int timerfd, Timestamp expiration)
   {
     LOG_SYSERR << "timerfd_settime()";
   }
-}
-
-}
-}
-}
+}}}}
 
 using namespace muduo;
 using namespace muduo::net;
@@ -97,8 +83,8 @@ TimerQueue::TimerQueue(EventLoop* loop)
     timers_(),
     callingExpiredTimers_(false)
 {
-  timerfdChannel_.setReadCallback( // 关注通道中的可读事件
-      boost::bind(&TimerQueue::handleRead, this));
+  timerfdChannel_.setReadCallback(
+      boost::bind(&TimerQueue::handleRead, this)); // 关注通道中的可读事件
   // we are always reading the timerfd, we disarm it with timerfd_settime.
   timerfdChannel_.enableReading();
 }
@@ -116,19 +102,19 @@ TimerQueue::~TimerQueue()
 
 // 增加一个定时器 线程安全的异步调用 其他线程可以调用
 TimerId TimerQueue::addTimer(const TimerCallback& cb, // 回调函数
-                             Timestamp when,          // 超时事件
-                             double interval)         // 间隔 
+                             Timestamp when,             // 超时事件
+                             double interval)            // 间隔
 {
   Timer* timer = new Timer(cb, when, interval);       // 1.创建一个定时器
-  loop_->runInLoop(         // 2.将任务交给loop_对应的IO线程来处理 异步线程
-      boost::bind(&TimerQueue::addTimerInLoop, this, timer));
-  return TimerId(timer, timer->sequence());
+  loop_->runInLoop(
+      boost::bind(&TimerQueue::addTimerInLoop, this, timer)); // 2.将任务交给loop_对应的IO线程来处理 异步线程
+  return TimerId(timer, timer->sequence()); // 定时器地址和序号
 }
 
 void TimerQueue::cancel(TimerId timerId)
 {
   loop_->runInLoop(
-      boost::bind(&TimerQueue::cancelInLoop, this, timerId));
+      boost::bind(&TimerQueue::cancelInLoop, this, timerId)); // 线程安全
 }
 
 void TimerQueue::addTimerInLoop(Timer* timer)
@@ -140,27 +126,31 @@ void TimerQueue::addTimerInLoop(Timer* timer)
 
   if (earliestChanged) 
   {
-  // 如果最早的到时时间改变重置定时器的超时时刻
-    resetTimerfd(timerfd_, timer->expiration()); 
+
+    resetTimerfd(timerfd_, timer->expiration()); // 如果最早的到时时间改变重置定时器的超时时刻
   }
 }
 
 void TimerQueue::cancelInLoop(TimerId timerId)
 {
   loop_->assertInLoopThread();
+
   assert(timers_.size() == activeTimers_.size());
-  ActiveTimer timer(timerId.timer_, timerId.sequence_);
-  ActiveTimerSet::iterator it = activeTimers_.find(timer);
+
+  ActiveTimer timer(timerId.timer_, timerId.sequence_); // 活跃的定时器
+
+  ActiveTimerSet::iterator it = activeTimers_.find(timer); // 从定时器set中找到
   if (it != activeTimers_.end()) // 找到要取消的定时器
   {
-    size_t n = timers_.erase(Entry(it->first->expiration(), it->first));
+    size_t n = timers_.erase(Entry(it->first->expiration(), it->first)); // 从定时器列表中删除
     assert(n == 1); (void)n;
-    delete it->first; // FIXME: no delete please 如果使用unique_ptr不需要delete
+
+    delete it->first; //  删除这个定时器
     activeTimers_.erase(it);
   }
   else if (callingExpiredTimers_) // 不在列表中 已经到期了 并且正在调用回调函数的定时器
   {
-    cancelingTimers_.insert(timer);
+    cancelingTimers_.insert(timer); // 插入到要cancel的定时器列表汇总
   }
   // 
   assert(timers_.size() == activeTimers_.size());
@@ -170,14 +160,16 @@ void TimerQueue::cancelInLoop(TimerId timerId)
 void TimerQueue::handleRead()
 {
   loop_->assertInLoopThread(); // 断言I/O线程中
+
   Timestamp now(Timestamp::now());
-  readTimerfd(timerfd_, now);  // 使用了LT 所以需要读走 避免一直触发
+  readTimerfd(timerfd_, now);      // 该定时器fd上有数据了 使用了LT 所以需要读走 避免一直触发
 
 // 获取某一个时刻的超时列表 有可能某一时刻多个定时器超时
   std::vector<Entry> expired = getExpired(now);
 
   callingExpiredTimers_ = true;
   cancelingTimers_.clear();
+
   // safe to callback outside critical section
   for (std::vector<Entry>::iterator it = expired.begin();
       it != expired.end(); ++it)
@@ -186,10 +178,11 @@ void TimerQueue::handleRead()
   }
   callingExpiredTimers_ = false;
 
-  reset(expired, now);         // 不是一次性 定时器 需要重启
+  reset(expired, now);         // 不是一次性定时器 需要重设
 }
 
 // rvo realease版本优化 所以不需要返回引用或指针
+// RVO:即release版本中会对代码优化 使得返回一个对象不许调用拷贝构造函数 所以可以返回一个对象 不用指针或者引用
 std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now)
 {
   assert(timers_.size() == activeTimers_.size());
@@ -208,6 +201,7 @@ std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now)
   // 将到期的定时器插入到expired中 STL中的区间都是闭开区间
   // 从timers_中移除到期的定时器
   // copy函数调用来将到时的定时器保存到expired vector中
+  // 这里直接调用 不是显式的一个个插入
   std::copy(timers_.begin(), end, back_inserter(expired));
   timers_.erase(timers_.begin(), end);
 
@@ -221,6 +215,7 @@ std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now)
   }
 
   assert(timers_.size() == activeTimers_.size());
+
   return expired;
 }
 
@@ -235,8 +230,7 @@ void TimerQueue::reset(const std::vector<Entry>& expired, Timestamp now)
     ActiveTimer timer(it->second, it->second->sequence());
 
 	// 如果是重复的定时器并且是未取消的定时器(能在活动的队列中找到) 则重启定时器
-    if (it->second->repeat()
-        && cancelingTimers_.find(timer) == cancelingTimers_.end())
+    if (it->second->repeat() && cancelingTimers_.find(timer) == cancelingTimers_.end())
     {
       it->second->restart(now); // 重新计算下一个超时时刻
       insert(it->second);       // 将它插入到定时器队列中
@@ -288,4 +282,3 @@ bool TimerQueue::insert(Timer* timer)
   assert(timers_.size() == activeTimers_.size());
   return earliestChanged;
 }
-
