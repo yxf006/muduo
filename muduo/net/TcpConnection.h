@@ -1,13 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-// This is a public header file, it must only include public header files.
-
 #ifndef MUDUO_NET_TCPCONNECTION_H
 #define MUDUO_NET_TCPCONNECTION_H
 
@@ -33,16 +23,13 @@ class Channel;
 class EventLoop;
 class Socket;
 
-///
 /// TCP connection, for both client and server usage.
-///
 /// This is an interface class, so don't expose too much details.
 class TcpConnection : boost::noncopyable,
                       public boost::enable_shared_from_this<TcpConnection>
 {
  public:
   /// Constructs a TcpConnection with a connected sockfd
-  ///
   /// User should not create this object.
   TcpConnection(EventLoop* loop,
                 const string& name,
@@ -100,7 +87,8 @@ class TcpConnection : boost::noncopyable,
 
  private:
   enum StateE { kDisconnected, kConnecting, kConnected, kDisconnecting }; 
-  // 连接的一个状态
+  // 连接的一个状态 用于对象生存期的控制
+
   void handleRead(Timestamp receiveTime);
   void handleWrite();
   void handleClose();
@@ -125,10 +113,11 @@ class TcpConnection : boost::noncopyable,
   // 数据发送完毕的回调函数 即所有的用户数据都拷贝到内核缓冲区回调该函数
   // 如果对等方接受不及时 受到通告窗口的控制 内核发送缓存不足 这个时候 就会将用户数据添加到应用层发送缓冲区outbuffer
   // 可能会撑爆outbuffer 解决方法:调整发送频率 关注writeCompleCallback
+
   // 将所有的数据都发送完 writeCompleCallback回调 继续发送
   WriteCompleteCallback writeCompleteCallback_; // 低水位回调函数
   HighWaterMarkCallback highWaterMarkCallback_; // 高水位回调函数 outbuffer快满了
-  CloseCallback closeCallback_; // 内部的close回调函数
+  CloseCallback closeCallback_;                 // 内部的close回调函数
   size_t highWaterMark_;
   Buffer inputBuffer_;   // 应用层的接收和发送缓冲区
   Buffer outputBuffer_;  // FIXME: use list<Buffer> as output buffer.

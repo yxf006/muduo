@@ -1,20 +1,9 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #include <muduo/net/EventLoopThread.h>
-
 #include <muduo/net/EventLoop.h>
-
 #include <boost/bind.hpp>
 
 using namespace muduo;
 using namespace muduo::net;
-
 
 EventLoopThread::EventLoopThread(const ThreadInitCallback& cb)
   : loop_(NULL),
@@ -40,12 +29,11 @@ EventLoop* EventLoopThread::startLoop()
 
   {
     MutexLockGuard lock(mutex_);
-    while (loop_ == NULL) // loop为空一直等待 有IO事件发生
+    while (loop_ == NULL) // loop为空一直等待 直到有IO事件发生
     {
       cond_.wait(); // 等待notify
     }
   }
-
   return loop_;
 }
 
@@ -57,14 +45,14 @@ void EventLoopThread::threadFunc()
   {
     callback_(&loop);
   }
-
   {
     MutexLockGuard lock(mutex_);
     loop_ = &loop; 
-	// 这里loop不为空了 指向一个栈上的对象 这个函数结束时 这个指针就无效了
-    // threadFunc函数退出 就意味着线程退出了 EventLoopThread对象也就没有存在的价值
-    // 整个程序都结束了 所以销毁不销毁都没什么关系
-    cond_.notify(); // 这里notify
+
+    // 这里指针指向了一个栈上对象 没有销毁的原因是：线程执行的时候调用这个线程执行函数
+    // 当线程执行结束的时候 线程对象销毁了 系统会自动释放资源
+
+    cond_.notify(); // 这里notify 事件循环有函数了 loop_不为空了
   }
 
   loop.loop();

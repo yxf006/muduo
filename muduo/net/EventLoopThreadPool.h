@@ -1,13 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-// This is an internal header file, you should not include this.
-
 #ifndef MUDUO_NET_EVENTLOOPTHREADPOOL_H
 #define MUDUO_NET_EVENTLOOPTHREADPOOL_H
 
@@ -45,7 +35,7 @@ class EventLoopThreadPool : boost::noncopyable
   bool started_;
   int numThreads_; // 线程数
   int next_;       // 当新连接到来 所选择的EventLoop对象下表
-  boost::ptr_vector<EventLoopThread> threads_; // EventLoopThread IO线程列表 
+  boost::ptr_vector<EventLoopThread> threads_; // EventLoopThread IO线程列表  注意这里使用了boost的ptr_vector容器
   std::vector<EventLoop*> loops_;              // EventLoop列表 栈上对象 不需要手动销毁
 };
 

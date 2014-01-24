@@ -76,7 +76,7 @@ class Socket : boost::noncopyable
   void setKeepAlive(bool on);
 
  private:
-  const int sockfd_;
+  const int sockfd_; // socket fd ÎÄ¼şÃèÊö·û
 };
 
 }

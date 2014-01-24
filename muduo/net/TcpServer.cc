@@ -1,13 +1,4 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #include <muduo/net/TcpServer.h>
-
 #include <muduo/base/Logging.h>
 #include <muduo/net/Acceptor.h>
 #include <muduo/net/EventLoop.h>
@@ -79,7 +70,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
 {
   loop_->assertInLoopThread();
 
-  //按照轮叫的方式选择一个EventLoop
+  //按照轮叫的方式选择一个EventLoop来处理连接
   EventLoop* ioLoop = threadPool_->getNextLoop();
   char buf[32];
   snprintf(buf, sizeof buf, ":%s#%d", hostport_.c_str(), nextConnId_);
@@ -89,6 +80,7 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
   LOG_INFO << "TcpServer::newConnection [" << name_
            << "] - new connection [" << connName
            << "] from " << peerAddr.toIpPort();
+
   InetAddress localAddr(sockets::getLocalAddr(sockfd));
   // FIXME poll with zero timeout to double confirm the new connection
   // FIXME use make_shared if necessary
@@ -97,7 +89,11 @@ void TcpServer::newConnection(int sockfd, const InetAddress& peerAddr)
                                           sockfd,
                                           localAddr,
                                           peerAddr));
+
+  // 将这个连接插入到连接列表中
   connections_[connName] = conn;
+
+    // 设置这个连接的读写关闭等的回调函数
   conn->setConnectionCallback(connectionCallback_);
   conn->setMessageCallback(messageCallback_);
   conn->setWriteCompleteCallback(writeCompleteCallback_);

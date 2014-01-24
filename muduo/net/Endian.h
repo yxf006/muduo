@@ -27,7 +27,7 @@ namespace sockets
 #if __GNUC_MINOR__ >= 6
 #pragma GCC diagnostic push
 #endif
-#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wconversion" // 一些编译选项的忽略
 #pragma GCC diagnostic ignored "-Wold-style-cast"
 inline uint64_t hostToNetwork64(uint64_t host64)
 {

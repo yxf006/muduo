@@ -1,11 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #include <muduo/net/TcpConnection.h>
 
 #include <muduo/base/Logging.h>
@@ -285,7 +277,7 @@ void TcpConnection::handleWrite()
     if (n > 0)
     {
       outputBuffer_.retrieve(n); // 缓冲区下标的移动
-      if (outputBuffer_.readableBytes() == 0)  // 发送缓冲区清空了
+      if (outputBuffer_.readableBytes() == 0)  //  发送缓冲区清空了 停止关注POOLOUT事件
       {
         channel_->disableWriting(); // 停止关注POLLOUT事件 以免出现busy loop
         if (writeCompleteCallback_)

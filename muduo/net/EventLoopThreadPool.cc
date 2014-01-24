@@ -1,13 +1,4 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #include <muduo/net/EventLoopThreadPool.h>
-
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/EventLoopThread.h>
 
@@ -40,11 +31,12 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
   for (int i = 0; i < numThreads_; ++i)
   {
     EventLoopThread* t = new EventLoopThread(cb);
-    threads_.push_back(t);
+    threads_.push_back(t); // 压入创建的IO线程
     loops_.push_back(t->startLoop()); // 启动EventLoopThread线程 在进入事件循环之前 会调用cb
   }
   if (numThreads_ == 0 && cb)
-  {//只有一个EventLoop 在这个EventLoop进入事件循环之前 调用cb
+  {
+	  //只有一个线程 EventLoop 在这个EventLoop进入事件循环之前 调用cb
     cb(baseLoop_);
   }
 }
@@ -53,19 +45,20 @@ void EventLoopThreadPool::start(const ThreadInitCallback& cb)
 EventLoop* EventLoopThreadPool::getNextLoop()
 {
   baseLoop_->assertInLoopThread();
-  EventLoop* loop = baseLoop_;
+  EventLoop* loop = baseLoop_; // 主线程
 
 // baseLoop_就是mainReactor如果为空 直接返回它 否则做如下处理
   if (!loops_.empty())
   {
     // round-robin
-    loop = loops_[next_];
+    loop = loops_[next_]; // 如果不只一个线程 则取出一个事件循环EventLoop
     ++next_;
     if (implicit_cast<size_t>(next_) >= loops_.size())
     {
       next_ = 0;
     }
   }
-  return loop;
+
+  return loop; // 如果只有一个线程这里返回的就是主线程
 }
 

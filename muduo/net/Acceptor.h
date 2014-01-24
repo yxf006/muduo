@@ -1,12 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-// This is an internal header file, you should not include this.
 
 #ifndef MUDUO_NET_ACCEPTOR_H
 #define MUDUO_NET_ACCEPTOR_H
@@ -46,11 +37,11 @@ class Acceptor : boost::noncopyable
  private:
   void handleRead();
 
-  EventLoop* loop_;
+  EventLoop* loop_;       // 对应的事件循环
   Socket acceptSocket_;
   Channel acceptChannel_; // 通道观察socketfd的可读事件
-  NewConnectionCallback newConnectionCallback_;
-  bool listenning_;
+  NewConnectionCallback newConnectionCallback_; // 新连接到来的回调函数
+  bool listenning_;      // 释放监听中
   int idleFd_;
 };
 

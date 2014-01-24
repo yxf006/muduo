@@ -1,13 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-// This is a public header file, it must only include public header files.
-
 #ifndef MUDUO_NET_INETADDRESS_H
 #define MUDUO_NET_INETADDRESS_H
 
@@ -21,17 +11,12 @@ namespace muduo
 namespace net
 {
 
-///
-/// Wrapper of sockaddr_in.
-///
 /// This is an POD interface class.
 class InetAddress : public muduo::copyable
 {
  public:
-  /// Constructs an endpoint with given port number.
-  /// Mostly used in TcpServer listening.
+
   //  仅仅指定port 不指定ip 则ip为INADDR_ANY(即0.0.0.0)
-  //
   explicit InetAddress(uint16_t port);
 
   /// Constructs an endpoint with given ip and port.

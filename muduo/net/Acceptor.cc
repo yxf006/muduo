@@ -1,11 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-
 #include <muduo/net/Acceptor.h>
 
 #include <muduo/net/EventLoop.h>
@@ -32,7 +24,7 @@ Acceptor::Acceptor(EventLoop* loop, const InetAddress& listenAddr)
   assert(idleFd_ >= 0);
   acceptSocket_.setReuseAddr(true);     // 设置地址重复利用
   acceptSocket_.bindAddress(listenAddr);
-  acceptChannel_.setReadCallback(       // 读的回调函数
+  acceptChannel_.setReadCallback(       // 设置通道有读事件的时候的回调函数
       boost::bind(&Acceptor::handleRead, this));
 }
 
@@ -56,14 +48,14 @@ void Acceptor::handleRead()
   loop_->assertInLoopThread();
   InetAddress peerAddr(0);
   //FIXME loop until no more
-  int connfd = acceptSocket_.accept(&peerAddr);
+  int connfd = acceptSocket_.accept(&peerAddr); // 调用socket的accept来等待客户端的连接
   if (connfd >= 0)
   {
     // string hostport = peerAddr.toIpPort();
     // LOG_TRACE << "Accepts of " << hostport;
     if (newConnectionCallback_)
     {
-      newConnectionCallback_(connfd, peerAddr);
+      newConnectionCallback_(connfd, peerAddr); // 连接到来调用新连接的回调函数来处理
     }
     else
     {
@@ -72,9 +64,7 @@ void Acceptor::handleRead()
   }
   else
   {
-    // Read the section named "The special problem of
-    // accept()ing when you can't" in libev's doc.
-    // By Marc Lehmann, author of livev.
+    // By Marc Lehmann, author of livev. 优雅的关闭错误的fd  先准备一个空闲的fd来连接
     if (errno == EMFILE) // EMFILE too many fd 处理太多的链接
     {
       ::close(idleFd_);
