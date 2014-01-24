@@ -30,7 +30,7 @@ __thread EventLoop* t_loopInThisThread = 0; // µ±Ç°Ö¸Õë¶ÔÏó ¼Ó__thread±íÊ¾Ïß³Ì´æ
 
 const int kPollTimeMs = 10000; // 10s
 
-// eventfdÓÃÀ´Ïß³Ì¼ä Í¨ĞÅ ²»ÓÃpipe socketpair
+// eventfdÓÃÀ´Ïß³Ì¼äÍ¨ĞÅ
 int createEventfd()
 {
   int evtfd = ::eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC); // ·Ç×èÈûµÄ
@@ -87,8 +87,8 @@ EventLoop::EventLoop()
   }
   wakeupChannel_->setReadCallback(
       boost::bind(&EventLoop::handleRead, this)); // ĞèÒª¶Á×ß·ñÔò»áÒ»Ö±´¥·¢
-  // we are always reading the wakeupfd
-  wakeupChannel_->enableReading();
+
+  wakeupChannel_->enableReading();  // we are always reading the wakeupfd
 }
 
 EventLoop::~EventLoop()
@@ -104,12 +104,15 @@ EventLoop::~EventLoop()
   assertInLoopThread(); // ¶ÏÑÔ´¦ÓÚµ±Ç°ÏÖ³¡ÖĞ
   looping_ = true;
   quit_ = false;
+
   LOG_TRACE << "EventLoop " << this << " start looping";
 
   while (!quit_)
   {
     activeChannels_.clear();
-    pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_); // ³¬Ê±ÊÂ¼ş
+
+    pollReturnTime_ = poller_->poll(kPollTimeMs, &activeChannels_); //  ·µ»Øpoll¹Ø×¢fdµÄ¿É¶ÁĞ´ÊÂ¼ş
+
     ++iteration_;
     if (Logger::logLevel() <= Logger::TRACE)
     {
@@ -117,7 +120,7 @@ EventLoop::~EventLoop()
     }
     // TODO sort channel by priority Í¨¹ıÓÅÏÈÈ¨ÅÅĞòÍ¨µÀ
     eventHandling_ = true; // true
-    for (ChannelList::iterator it = activeChannels_.begin(); // ±éÀú»î¶¯Í¨µÀ½øĞĞ´¦Àí
+    for (ChannelList::iterator it = activeChannels_.begin(); // ±éÀú»î¶¯Í¨µÀÊ¹ÓÃÌáÇ°×¢²áµÄ»Øµ÷º¯Êı ´¦ÀíÕâĞ©¿É¶ÁĞ´ÊÂ¼ş
         it != activeChannels_.end(); ++it)
     {
       currentActiveChannel_ = *it;
@@ -125,7 +128,7 @@ EventLoop::~EventLoop()
     }
     currentActiveChannel_ = NULL;
     eventHandling_ = false; // false
-    doPendingFunctors();    // ÎªÁËÈÃIOÏß³ÌÒ²ÄÜÖ´ĞĞÒ»Ğ©¼ÆËãÈÎÎñ
+    doPendingFunctors();    // ÎªÁËÈÃIOÏß³ÌÒ²ÄÜÖ´ĞĞÒ»Ğ©¼ÆËãÈÎÎñ ºÏÀíÀûÓÃCPU
   }
 
   LOG_TRACE << "EventLoop " << this << " stop looping";
@@ -166,14 +169,14 @@ void EventLoop::queueInLoop(const Functor& cb)
 // Ö»ÓĞµ±Ç°IOÏß³ÌµÄÊÂ¼ş»Øµ÷ÖĞµ÷ÓÃqueueInLooop²Å²»ĞèÒª»½ĞÑ
   if (!isInLoopThread() || callingPendingFunctors_)
   {
-    wakeup();
+    wakeup(); // »½ĞÑ±ğµÄÏß³Ì Íùeventfd»º³åÇøÖĞĞ´Èë8¸ö´óĞ¡µÄ×Ö¶Î
   }
 }
 
 // ¶¨Ê±Æ÷º¯Êı Ò»´ÎĞÔ¶¨Ê±Æ÷
 TimerId EventLoop::runAt(const Timestamp& time, const TimerCallback& cb) 
 {
-  return timerQueue_->addTimer(cb, time, 0.0);
+  return timerQueue_->addTimer(cb, time, 0.0); // 0.0²»ÊÇ¼ä¸ô´¥·¢Æ÷
 }
 
 // ¶¨Ê±Æ÷º¯Êı 
@@ -190,7 +193,7 @@ TimerId EventLoop::runEvery(double interval, const TimerCallback& cb) // ¶¨Ê±Æ÷º
   return timerQueue_->addTimer(cb, time, interval);
 }
 
-// ¶¨Ê±Æ÷º¯Êı
+// ¶¨Ê±Æ÷Ïú»Ùº¯Êı
 void EventLoop::cancel(TimerId timerId)  
 {
   return timerQueue_->cancel(timerId);
@@ -222,7 +225,7 @@ void EventLoop::abortNotInLoopThread()
             << ", current thread id = " <<  CurrentThread::tid();
 }
 
-// »½ĞÑ±ğµÄÏß³Ìº¯Êı
+// »½ĞÑ±ğµÄÏß³Ìº¯Êı Ïòeventfd»º³åÇøĞ´Èë8¸ö×Ö½Ú ÊµÏÖÏß³Ì¼äµÄÍ¨ĞÅ
 void EventLoop::wakeup()
 {
   uint64_t one = 1; // 8¸ö×Ö½ÚµÄ»º³åÇø Ğ´Èë 1 wakeup
@@ -237,28 +240,29 @@ void EventLoop::wakeup()
 void EventLoop::handleRead()
 {
   uint64_t one = 1;
-  ssize_t n = sockets::read(wakeupFd_, &one, sizeof one);
+  ssize_t n = sockets::read(wakeupFd_, &one, sizeof one); // ¶Á×ßÊı¾İ eventfd¸½½ü»º´æµÄ8¸ö×Ö½Ú
   if (n != sizeof one)
   {
     LOG_ERROR << "EventLoop::handleRead() reads " << n << " bytes instead of 8";
   }
 }
 
-// ²»ÊÇ¼òµ¥µØÔÚÁÙ½çÇøÒ»´Îµ÷ÓÃFunctor ¶øÊÇ°Ñ»Øµ÷ÁĞ±íswapµ½functorsÖĞ ÕâÑùÒ»·½Ãæ¼õÉÙÁËÁÙ½çÇøµÄ³¤¶È
-// ÒâÎ¶²»»á×èÈûÆäËûÏß³ÌµÄqueueLoop()
-// ÁíÒ»·½ÃæÒ²±ÜÃâÁËËÀËø ÒòÎªFunctor¿ÉÄÜÔÙ´Îµ÷ÓÃqueueInLooop()
-// ÓÉÓÚdoPendingFunctors()µ÷ÓÃµÄFunctor¿ÉÄÜÔÙ´Îµ÷ÓÃqueueInLoop(cb) ÕâÊ± queueInLoop()¾Í±ØĞëwakeup()
-// ·ñÔòĞÂÔöµÄcb¿ÉÄÜ¾Í²»ÄÜ¼°Ê±µ÷ÓÃÁË
+// ²»ÊÇ¼òµ¥µØÔÚÁÙ½çÇøÒ»´Îµ÷ÓÃFunctor ¶øÊÇ°Ñ»Øµ÷ÁĞ±íswapµ½functorsÖĞ
+// ÕâÑùÒ»·½Ãæ¼õÉÙÁËÁÙ½çÇøµÄ³¤¶È
+// Í¬Ê± ÒâÎ¶²»»á×èÈûÆäËûÏß³ÌµÄqueueLoop() ÒòÎªÕâ¸öÊ±ºòËøÒÑ¾­ÊÍ·ÅÁË µ÷ÓÃqueueLoopÍæ¶ÓÁĞÖĞÌí¼ÓÈÎÎñ²»»á×èÈûµ½ËøÊÍ·Å
+// ÁíÒ»·½ÃæÒ²±ÜÃâÁËËÀËø ÒòÎªFunctor¿ÉÄÜÔÙ´Îµ÷ÓÃqueueInLooop()½øĞĞ¼ÓËø µ¼ÖÂ¶ÓÁĞ±»2´Î¼ÓËø
+// ÓÉÓÚdoPendingFunctors()µ÷ÓÃµÄFunctor¿ÉÄÜÔÙ´Îµ÷ÓÃqueueInLoop(cb)Íæ¶ÓÁĞÖĞÌí¼ÓÈÎÎñ
+// ÕâÊ± queueInLoop()¾Í±ØĞëwakeup() ·ñÔòĞÂÔöµÄcb¿ÉÄÜ¾Í²»ÄÜ¼°Ê±µ÷ÓÃÁË
 // muduo Ã»ÓĞ·´¸´Ö´ĞĞdoPendingFunctors()Ö±µ½pendingFunctorsÎª¿Õ ÕâÊÇÓĞÒâµÄ
 // ·ñÔòIOÏß³Ì¿ÉÄÜÏİÈëËÀÑ­»· ÎŞ·¨´¦ÀíIOÊÂ¼ş
 void EventLoop::doPendingFunctors()
 {
   std::vector<Functor> functors;
-  callingPendingFunctors_ = true;
+  callingPendingFunctors_ = true; // ÕıÔÚµ÷ÓÃ¼ÆËãº¯Êı
 
   {
   MutexLockGuard lock(mutex_);
-  functors.swap(pendingFunctors_); // ½«pendFunctors_¶¼Ìí¼Óµ½functorsÖĞ ÈÃËüÀ´Ö´ĞĞ
+  functors.swap(pendingFunctors_); // ½«pendFunctors_¶¼Ìí¼Óµ½functorsÖĞ ÈÃËüÀ´Ö´ĞĞ ÁÙÊ±±£´æµ½ÁË±ğµÄµØ·½
   }
 
   for (size_t i = 0; i < functors.size(); ++i)

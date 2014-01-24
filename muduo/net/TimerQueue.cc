@@ -162,7 +162,7 @@ void TimerQueue::handleRead()
   loop_->assertInLoopThread(); // 断言I/O线程中
 
   Timestamp now(Timestamp::now());
-  readTimerfd(timerfd_, now);      // 该定时器fd上有数据了 使用了LT 所以需要读走 避免一直触发
+  readTimerfd(timerfd_, now);      // 该定时器fd上有数据了 某些定时器超时了 使用了LT 所以需要读走 避免一直触发
 
 // 获取某一个时刻的超时列表 有可能某一时刻多个定时器超时
   std::vector<Entry> expired = getExpired(now);
@@ -181,6 +181,7 @@ void TimerQueue::handleRead()
   reset(expired, now);         // 不是一次性定时器 需要重设
 }
 
+// 返回超时的定时器
 // rvo realease版本优化 所以不需要返回引用或指针
 // RVO:即release版本中会对代码优化 使得返回一个对象不许调用拷贝构造函数 所以可以返回一个对象 不用指针或者引用
 std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now)
