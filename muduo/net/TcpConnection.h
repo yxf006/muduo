@@ -116,9 +116,9 @@ class TcpConnection : boost::noncopyable,
 
   // 将所有的数据都发送完 writeCompleCallback回调 继续发送
   WriteCompleteCallback writeCompleteCallback_; // 低水位回调函数
-  HighWaterMarkCallback highWaterMarkCallback_; // 高水位回调函数 outbuffer快满了
+  HighWaterMarkCallback highWaterMarkCallback_; // 高水位回调函数 outbuffer快满了防止撑爆用户层缓冲区
   CloseCallback closeCallback_;                 // 内部的close回调函数
-  size_t highWaterMark_;
+  size_t highWaterMark_; // 高水位标志 防止应用层缓冲区被撑爆
   Buffer inputBuffer_;   // 应用层的接收和发送缓冲区
   Buffer outputBuffer_;  // FIXME: use list<Buffer> as output buffer.
   boost::any context_;   // boost的any库 可以保持任意的类型 绑定一个未知类型的上下文对象

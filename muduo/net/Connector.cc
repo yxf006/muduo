@@ -1,21 +1,10 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-
 #include <muduo/net/Connector.h>
-
 #include <muduo/base/Logging.h>
 #include <muduo/net/Channel.h>
 #include <muduo/net/EventLoop.h>
 #include <muduo/net/SocketsOps.h>
 
 #include <boost/bind.hpp>
-
 #include <errno.h>
 
 using namespace muduo;
@@ -83,7 +72,7 @@ void Connector::stopInLoop()
 void Connector::connect()
 {
   int sockfd = sockets::createNonblockingOrDie(); // 创建非阻塞socket
-  int ret = sockets::connect(sockfd, serverAddr_.getSockAddrInet());
+  int ret = sockets::connect(sockfd, serverAddr_.getSockAddrInet()); // 调用sockets的connect()函数
   int savedErrno = (ret == 0) ? 0 : errno;
   switch (savedErrno)
   {
@@ -130,6 +119,7 @@ void Connector::restart()
   startInLoop();
 }
 
+// 设置连接成功的读写处理函数
 void Connector::connecting(int sockfd)
 {
   setState(kConnecting);

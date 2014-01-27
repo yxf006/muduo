@@ -1,12 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-
 #include <muduo/net/TcpClient.h>
 
 #include <muduo/base/Logging.h>
@@ -20,17 +11,6 @@
 
 using namespace muduo;
 using namespace muduo::net;
-
-// TcpClient::TcpClient(EventLoop* loop)
-//   : loop_(loop)
-// {
-// }
-
-// TcpClient::TcpClient(EventLoop* loop, const string& host, uint16_t port)
-//   : loop_(CHECK_NOTNULL(loop)),
-//     serverAddr_(host, port)
-// {
-// }
 
 namespace muduo
 {
@@ -46,7 +26,7 @@ void removeConnection(EventLoop* loop, const TcpConnectionPtr& conn)
 
 void removeConnector(const ConnectorPtr& connector)
 {
-  //connector->
+   //connector->
 }
 
 }
@@ -110,7 +90,6 @@ void TcpClient::connect()
 void TcpClient::disconnect()
 {
   connect_ = false;
-
   {
     MutexLockGuard lock(mutex_);
     if (connection_)
@@ -176,4 +155,3 @@ void TcpClient::removeConnection(const TcpConnectionPtr& conn)
     connector_->restart();
   }
 }
-

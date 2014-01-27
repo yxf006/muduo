@@ -1,13 +1,3 @@
-// Copyright 2010, Shuo Chen.  All rights reserved.
-// http://code.google.com/p/muduo/
-//
-// Use of this source code is governed by a BSD-style license
-// that can be found in the License file.
-
-// Author: Shuo Chen (chenshuo at chenshuo dot com)
-//
-// This is a public header file, it must only include public header files.
-
 #ifndef MUDUO_NET_TCPCLIENT_H
 #define MUDUO_NET_TCPCLIENT_H
 
@@ -72,7 +62,7 @@ class TcpClient : boost::noncopyable
   ConnectorPtr connector_; // avoid revealing Connector 用于主动发起连接
   const string name_;	   // 名称
   ConnectionCallback connectionCallback_; // 连接建立回调函数
-  MessageCallback messageCallback_;
+  MessageCallback    messageCallback_;
   WriteCompleteCallback writeCompleteCallback_;
   bool retry_;   // atmoic 连接建立后断开是否重连
   bool connect_; // atomic

@@ -173,7 +173,8 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
   {
     LOG_TRACE << "I am going to write more data";
     size_t oldLen = outputBuffer_.readableBytes();
-	// 如果超过高水位标highWaterMark_ 回调highWaterMarkCallback_
+
+	// 如果超过高水位标highWaterMark_ 回调highWaterMarkCallback_ 剩余发送缓冲区空间不够了
     if (oldLen + remaining >= highWaterMark_
         && oldLen < highWaterMark_
         && highWaterMarkCallback_)
@@ -183,7 +184,7 @@ void TcpConnection::sendInLoop(const void* data, size_t len)
     outputBuffer_.append(static_cast<const char*>(data)+nwrote, remaining);
     if (!channel_->isWriting())
     {
-      channel_->enableWriting();
+      channel_->enableWriting(); // 内核缓冲区满了不可写 关注POLLOUT事件
     }
   }
 }
@@ -297,10 +298,6 @@ void TcpConnection::handleWrite()
     else
     {
       LOG_SYSERR << "TcpConnection::handleWrite";
-      // if (state_ == kDisconnecting)
-      // {
-      //   shutdownInLoop();
-      // }
     }
   }
   else
